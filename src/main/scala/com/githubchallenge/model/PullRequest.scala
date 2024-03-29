@@ -6,5 +6,4 @@ import io.circe.generic.JsonCodec
 case class PullRequest(
     id: Long,
     state: String,
-    base: BasePullRequest,
   )

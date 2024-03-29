@@ -1,6 +1,6 @@
 package com.githubchallenge.db.repositories
 
-
+import cats.data.NonEmptyList
 import cats.effect.kernel.MonadCancelThrow
 import com.githubchallenge.db.repositories.sql.ProjectsSql
 import com.githubchallenge.model.ProjectMetrics
@@ -10,6 +10,7 @@ import doobie.util.transactor.Transactor
 
 trait ProjectsRepository[F[_]] {
   def insert(project: Repository): F[Unit]
+  def insertBatch(projects: NonEmptyList[Repository]): F[Unit]
   def findById(id: Long): F[Option[ProjectMetrics]]
 }
 
@@ -19,6 +20,10 @@ object ProjectsRepository {
       override def insert(project: Repository): F[Unit] =
         ProjectsSql.insert(project).transact(transactor)
 
+      override def insertBatch(projects: NonEmptyList[Repository]): F[Unit] = {
+        val projectsList = projects.toList
+        ProjectsSql.insertBatch(projectsList).transact(transactor)
+      }
       override def findById(id: Long): F[Option[ProjectMetrics]] =
         ProjectsSql.selectById(id).transact(transactor)
     }

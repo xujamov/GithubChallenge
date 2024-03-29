@@ -3,4 +3,4 @@ package com.githubchallenge.model
 import io.circe.generic.JsonCodec
 
 @JsonCodec
-case class Commit(id: String, message: String)
+case class CommitRequest(id: String, message: String)

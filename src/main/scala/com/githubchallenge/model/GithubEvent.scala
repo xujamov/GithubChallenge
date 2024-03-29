@@ -5,11 +5,10 @@ import io.circe.generic.extras.ConfiguredJsonCodec
 
 @ConfiguredJsonCodec
 case class GithubEvent(
-    action: Option[String],
     repository: Repository,
     sender: Contributor,
     pullRequest: Option[PullRequest],
-    commits: Option[Commit],
+    commits: Option[List[CommitRequest]],
   )
 
 object GithubEvent {
