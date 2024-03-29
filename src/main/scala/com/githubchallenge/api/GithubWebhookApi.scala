@@ -3,16 +3,17 @@ package com.githubchallenge.api
 import cats.Monad
 import cats.effect.kernel.Concurrent
 import cats.implicits._
-import com.githubchallenge.model.CommitDetails
-import com.githubchallenge.model.GithubEvent
-import com.githubchallenge.model.PullDetails
-import com.githubchallenge.service.GithubWebhookService
 import io.circe.Json
 import org.http4s.HttpRoutes
 import org.http4s.circe.CirceEntityCodec._
 import org.http4s.circe.JsonDecoder
 import org.http4s.dsl.Http4sDsl
 import org.typelevel.log4cats.Logger
+
+import com.githubchallenge.model.CommitDetails
+import com.githubchallenge.model.GithubEvent
+import com.githubchallenge.model.PullDetails
+import com.githubchallenge.service.GithubWebhookService
 
 final case class GithubWebhookApi[F[_]: Monad: Concurrent: JsonDecoder](
     service: GithubWebhookService[F]

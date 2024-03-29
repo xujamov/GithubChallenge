@@ -6,14 +6,15 @@ import cats.MonadThrow
 import cats.effect.Async
 import cats.effect.Resource
 import cats.effect.std.Console
+import doobie.util.transactor.Transactor
+import org.typelevel.log4cats.Logger
+import pureconfig.generic.auto.exportReader
+
 import com.githubchallenge.Config
 import com.githubchallenge.ConfigLoader
 import com.githubchallenge.db.Repositories
 import com.githubchallenge.service.Services
 import com.githubchallenge.utils.Migrations
-import doobie.util.transactor.Transactor
-import org.typelevel.log4cats.Logger
-import pureconfig.generic.auto.exportReader
 
 case class Environment[F[_]: Async: MonadThrow: Logger](
     config: Config,

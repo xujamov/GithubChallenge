@@ -2,11 +2,12 @@ package com.githubchallenge.db.repositories
 
 import cats.data.NonEmptyList
 import cats.effect.kernel.MonadCancelThrow
+import doobie.implicits._
+import doobie.util.transactor.Transactor
+
 import com.githubchallenge.db.repositories.sql.ContributorsSql
 import com.githubchallenge.model.Contributor
 import com.githubchallenge.model.ContributorMetrics
-import doobie.implicits._
-import doobie.util.transactor.Transactor
 
 trait ContributorsRepository[F[_]] {
   def insert(contributor: Contributor): F[Unit]

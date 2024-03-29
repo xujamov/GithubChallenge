@@ -1,10 +1,11 @@
 package com.githubchallenge.db.repositories.sql
 
 import cats.implicits.toFunctorOps
-import com.githubchallenge.model.ProjectMetrics
-import com.githubchallenge.model.Repository
 import doobie.implicits._
 import doobie.util.update.Update
+
+import com.githubchallenge.model.ProjectMetrics
+import com.githubchallenge.model.Repository
 
 private[repositories] object ProjectsSql {
   def insert(project: Repository): doobie.ConnectionIO[Unit] =

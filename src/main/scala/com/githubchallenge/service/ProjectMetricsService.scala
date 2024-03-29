@@ -1,7 +1,7 @@
 package com.githubchallenge.service
 
-
 import cats.Monad
+
 import com.githubchallenge.db.repositories.ProjectsRepository
 import com.githubchallenge.model.ProjectMetrics
 

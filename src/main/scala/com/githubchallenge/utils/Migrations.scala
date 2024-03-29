@@ -3,7 +3,6 @@ package com.githubchallenge.utils
 import java.sql.DriverManager
 
 import cats.effect.Sync
-import cats.implicits.toFlatMapOps
 import cats.syntax.all._
 import org.flywaydb.core.Flyway
 import org.typelevel.log4cats.Logger

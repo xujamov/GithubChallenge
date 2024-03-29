@@ -1,11 +1,11 @@
 package com.githubchallenge.db.repositories.sql
 
-
 import cats.implicits.toFunctorOps
-import com.githubchallenge.db.repositories.sql.Dto.Commit
-import com.githubchallenge.model.PullDetails
 import doobie.implicits._
 import doobie.util.update.Update
+
+import com.githubchallenge.db.repositories.sql.Dto.Commit
+import com.githubchallenge.model.PullDetails
 
 private[repositories] object GithubWebhookSql {
   def createPullRequest(event: PullDetails): doobie.ConnectionIO[Unit] = {

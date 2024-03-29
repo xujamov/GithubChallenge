@@ -1,8 +1,9 @@
 package com.githubchallenge.service
 
 import cats.effect.Async
-import com.githubchallenge.db.Repositories
 import org.typelevel.log4cats.Logger
+
+import com.githubchallenge.db.Repositories
 
 case class Services[F[_]](
     contributorMetricsService: ContributorMetricsService[F],

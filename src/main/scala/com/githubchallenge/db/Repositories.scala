@@ -1,10 +1,11 @@
 package com.githubchallenge.db
 
 import cats.effect.Async
+import doobie.util.transactor.Transactor
+
 import com.githubchallenge.db.repositories.ContributorsRepository
 import com.githubchallenge.db.repositories.GithubWebhookRepository
 import com.githubchallenge.db.repositories.ProjectsRepository
-import doobie.util.transactor.Transactor
 
 case class Repositories[F[_]](
     contributors: ContributorsRepository[F],

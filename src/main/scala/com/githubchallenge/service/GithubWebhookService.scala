@@ -5,6 +5,7 @@ import cats.data.NonEmptyList
 import cats.implicits.toFlatMapOps
 import cats.implicits.toFoldableOps
 import cats.implicits.toFunctorOps
+
 import com.githubchallenge.db.repositories.ContributorsRepository
 import com.githubchallenge.db.repositories.GithubWebhookRepository
 import com.githubchallenge.db.repositories.ProjectsRepository

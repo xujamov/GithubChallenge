@@ -2,12 +2,13 @@ package com.githubchallenge.api
 
 import cats.Monad
 import cats.implicits._
-import com.githubchallenge.service.ContributorMetricsService
 import org.http4s.HttpRoutes
 import org.http4s.circe.CirceEntityCodec._
 import org.http4s.circe.JsonDecoder
 import org.http4s.dsl.Http4sDsl
 import org.typelevel.log4cats.Logger
+
+import com.githubchallenge.service.ContributorMetricsService
 
 final case class ContributorMetricsApi[F[_]: Monad: JsonDecoder](
     service: ContributorMetricsService[F]
