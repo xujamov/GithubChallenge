@@ -9,12 +9,13 @@ import doobie.util.update.Update
 
 private[repositories] object GithubWebhookSql {
   def createPullRequest(event: PullDetails): doobie.ConnectionIO[Unit] = {
-    val is_closed: Boolean =
-      if (event.state == "open") false else true
+    val isClosed: Boolean = event.state != "open"
     fr"""
       INSERT INTO pull_requests
-      VALUES (${event.id}, ${event.repo.id}, ${event.user.id}, $is_closed)
-      ON CONFLICT (id) DO NOTHING;
+      VALUES (${event.id}, ${event.repo.id}, ${event.user.id}, $isClosed)
+      ON CONFLICT (id)
+      DO UPDATE
+      SET is_closed = $isClosed;
     """.update.run.void
   }
 

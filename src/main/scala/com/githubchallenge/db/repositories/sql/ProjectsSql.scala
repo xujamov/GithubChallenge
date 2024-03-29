@@ -28,7 +28,7 @@ private[repositories] object ProjectsSql {
     fr"""
     SELECT
       COUNT(DISTINCT cm.contributor_id) AS total_contributors,
-      COUNT(cm.id) AS total_commits,
+      COUNT(DISTINCT cm.id) AS total_commits,
       COUNT(DISTINCT CASE WHEN pr.is_closed = true THEN pr.id END) AS total_closed_prs,
       COUNT(DISTINCT CASE WHEN pr.is_closed = false THEN pr.id END) AS total_open_prs
     FROM
