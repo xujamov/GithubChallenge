@@ -13,6 +13,7 @@ lazy val root = (project in file("."))
       org.http4s.all ++
         org.tpolecat.doobie.all ++
         com.github.pureconfig.all ++
+        com.sttp.all ++
         Dependencies.io.circe.all ++
         Seq(
           org.typelevel.cats.core,

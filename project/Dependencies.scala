@@ -11,6 +11,7 @@ object Dependencies {
     lazy val pureconfig = "0.17.5"
     lazy val doobie = "1.0.0-M4"
     lazy val flyway = "9.16.0"
+    lazy val sttp = "3.7.2"
   }
   trait LibGroup {
     def all: Seq[ModuleID]
@@ -37,6 +38,14 @@ object Dependencies {
           "com.github.pureconfig" %% "pureconfig-enumeratum" % Versions.pureconfig
         override def all: Seq[ModuleID] = Seq(core, enumeratum)
       }
+    }
+
+    object sttp extends LibGroup {
+      lazy val circe: ModuleID =
+        "com.softwaremill.sttp.client3" %% "circe" % Versions.sttp
+      lazy val `fs2-backend`: ModuleID =
+        "com.softwaremill.sttp.client3" %% "async-http-client-backend-fs2" % Versions.sttp
+      override def all: Seq[ModuleID] = Seq(circe, `fs2-backend`)
     }
   }
   object org {
