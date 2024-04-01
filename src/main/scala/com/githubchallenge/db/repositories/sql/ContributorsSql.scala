@@ -17,7 +17,7 @@ private[repositories] object ContributorsSql {
 
   def insertBatch(contributors: List[Contributor]): doobie.ConnectionIO[Unit] = {
     val fragment = s"""
-        INSERT INTO projects
+        INSERT INTO contributors
         VALUES (?, ?)
         ON CONFLICT (id) DO NOTHING;
       """
