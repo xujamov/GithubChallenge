@@ -61,6 +61,12 @@ object GithubWebhookService {
               )
           )
         for {
+          _ <- NonEmptyList.fromList(commits.map(_.repo)).traverse_ { repos =>
+            projectsRepository.insertBatch(repos)
+          }
+          _ <- NonEmptyList.fromList(commits.map(_.user)).traverse_ { users =>
+            contributorsRepository.insertBatch(users)
+          }
           _ <- NonEmptyList.fromList(commitDetailsList).traverse_ { commits =>
             githubWebhookRepository.createBatch(commits)
           }

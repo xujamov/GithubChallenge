@@ -55,7 +55,7 @@ object ScheduledJob {
                 CommitRequest(id = githubCommit.sha, githubCommit.commit.message)
               ),
               user = committer,
-              repo = Repository(id = githubConfig.repoId, name = githubConfig.owner),
+              repo = Repository(id = githubConfig.repoId, name = githubConfig.repo),
             )
         }
         .toList
