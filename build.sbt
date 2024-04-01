@@ -17,6 +17,8 @@ lazy val root = (project in file("."))
         Dependencies.io.circe.all ++
         Seq(
           org.typelevel.cats.core,
+          com.github.cron4s,
+          eu.timepit.`fs2-cron4s`,
           org.typelevel.cats.effect,
           org.typelevel.cats.log4cats,
           ch.qos.logback,

@@ -6,6 +6,7 @@ case class Config(
     httpServer: Config.HttpServerConfig,
     database: Config.DataBaseConfig,
     github: Config.GithubConfig,
+    cron: String,
   ) {
   lazy val migrations: MigrationsConfig = MigrationsConfig(
     hostname = database.host,

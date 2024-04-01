@@ -12,6 +12,8 @@ object Dependencies {
     lazy val doobie = "1.0.0-M4"
     lazy val flyway = "9.16.0"
     lazy val sttp = "3.7.2"
+    lazy val cron4s = "0.6.1"
+    lazy val `fs2-cron4s` = "0.8.3"
   }
   trait LibGroup {
     def all: Seq[ModuleID]
@@ -31,6 +33,8 @@ object Dependencies {
   }
   object com {
     object github {
+      lazy val cron4s: ModuleID =
+        "com.github.alonsodomin.cron4s" %% "cron4s-core" % Versions.cron4s
       object pureconfig extends LibGroup {
         lazy val core: ModuleID =
           "com.github.pureconfig" %% "pureconfig" % Versions.pureconfig
@@ -46,6 +50,11 @@ object Dependencies {
       lazy val `fs2-backend`: ModuleID =
         "com.softwaremill.sttp.client3" %% "async-http-client-backend-fs2" % Versions.sttp
       override def all: Seq[ModuleID] = Seq(circe, `fs2-backend`)
+    }
+  }
+  object eu {
+    object timepit {
+      lazy val `fs2-cron4s` = "eu.timepit" %% "fs2-cron-cron4s" % Versions.`fs2-cron4s`
     }
   }
   object org {
