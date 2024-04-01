@@ -13,6 +13,7 @@ import cron4s.CronExpr
 import cron4s.lib.javatime._
 import eu.timepit.fs2cron.Scheduler
 import eu.timepit.fs2cron.cron4s.Cron4sScheduler
+import io.circe.Decoder
 import io.circe.parser.decode
 import org.typelevel.log4cats.Logger
 import sttp.client3.Identity
@@ -26,6 +27,8 @@ import com.githubchallenge.Config.GithubConfig
 import com.githubchallenge.model.CommitDetails
 import com.githubchallenge.model.CommitRequest
 import com.githubchallenge.model.GithubCommit
+import com.githubchallenge.model.GithubPull
+import com.githubchallenge.model.PullDetails
 import com.githubchallenge.model.Repository
 import com.githubchallenge.service.GithubWebhookService
 
@@ -46,6 +49,7 @@ object ScheduledJob {
         githubConfig.owner,
         githubConfig.repo,
       )
+      repository = Repository(id = githubConfig.repoId, name = githubConfig.repo)
       commitsList = commits
         .groupBy(_.committer)
         .map {
@@ -55,12 +59,19 @@ object ScheduledJob {
                 CommitRequest(id = githubCommit.sha, githubCommit.commit.message)
               ),
               user = committer,
-              repo = Repository(id = githubConfig.repoId, name = githubConfig.repo),
+              repo = repository,
             )
         }
         .toList
       _ <- githubWebhookService.insertBatchCommits(commitsList)
+      pulls <- fetchPullsFromGitHub[F](
+        repository,
+        githubConfig.token,
+        githubConfig.owner,
+        githubConfig.repo,
+      )
 
+      _ <- githubWebhookService.insertBatchPRs(pulls)
       _ <- Logger[F].info("ScheduledJob: Finished")
     } yield ())
       .handleErrorWith { throwable =>
@@ -81,40 +92,70 @@ object ScheduledJob {
       .header("X-GitHub-Api-Version", "2022-11-28")
       .get(uri)
 
-    sendRequest[F](request)
+    sendRequest[F, GithubCommit](request)
   }
 
-  private def sendRequest[F[_]: MonadThrow: Logger](
+  private def fetchPullsFromGitHub[F[_]: MonadThrow: Logger](
+      repository: Repository,
+      githubToken: String,
+      owner: String,
+      repo: String,
+    )(implicit
+      backend: SttpBackend[F, Any]
+    ): F[List[PullDetails]] = {
+    val uri = Uri(
+      URI.create(s"https://api.github.com/repos/$owner/$repo/pulls")
+    )
+    val request = basicRequest
+      .header("Accept", "application/vnd.github+json")
+      .header("Authorization", s"Bearer $githubToken")
+      .header("X-GitHub-Api-Version", "2022-11-28")
+      .get(uri)
+
+    for {
+      pulls <- sendRequest[F, GithubPull](request)
+      detailedPulls = pulls.map { pull =>
+        PullDetails(
+          pull.id,
+          pull.state,
+          pull.user,
+          repository,
+        )
+      }
+    } yield detailedPulls
+  }
+
+  private def sendRequest[F[_]: MonadThrow: Logger, A: Decoder](
       request: RequestT[Identity, Either[String, String], Any]
     )(implicit
       backend: SttpBackend[F, Any]
-    ): F[List[GithubCommit]] =
+    ): F[List[A]] =
     for {
       response <- backend.send(request)
-      commits <- handleResponse[F](response)
+      commits <- handleResponse[F, A](response)
     } yield commits
 
-  private def handleResponse[F[_]: MonadThrow: Logger](
+  private def handleResponse[F[_]: MonadThrow: Logger, A: Decoder](
       response: Response[Either[String, String]]
-    ): F[List[GithubCommit]] =
+    ): F[List[A]] =
     response.body match {
       case Left(error) =>
         val errorMsg = s"GitHub request failed with error: $error"
         Logger[F].error(errorMsg) *>
           new Exception(
-            s"Error occurred while getting list commits response body"
+            s"Error occurred while getting list response body"
           )
-            .raiseError[F, List[GithubCommit]]
+            .raiseError[F, List[A]]
 
       case Right(json) =>
-        decode[List[GithubCommit]](json) match {
+        decode[List[A]](json) match {
           case Left(err) =>
             val errorMsg = s"Failed to parse GitHub response: $err"
             Logger[F].error(errorMsg) *>
               new Exception(
-                s"Error occurred while decoding list commits"
+                s"Error occurred while decoding list"
               )
-                .raiseError[F, List[GithubCommit]]
+                .raiseError[F, List[A]]
 
           case Right(commits) => MonadThrow[F].pure(commits)
         }
