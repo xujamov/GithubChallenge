@@ -16,6 +16,7 @@ import com.githubchallenge.model.PullDetails
 trait GithubWebhookService[F[_]] {
   def insertPRs(event: PullDetails): F[Unit]
   def insertCommits(event: CommitDetails): F[Unit]
+  def insertBatchCommits(event: List[CommitDetails]): F[Unit]
 }
 
 object GithubWebhookService {
@@ -43,5 +44,27 @@ object GithubWebhookService {
             )
           }
         } yield ()
+      override def insertBatchCommits(
+          commits: List[CommitDetails]
+        ): F[Unit] = {
+        val commitDetailsList = commits
+          .flatMap(commitDetails =>
+            commitDetails
+              .commits
+              .map(commit =>
+                Dto.Commit(
+                  commit.id,
+                  commit.message,
+                  commitDetails.repo.id,
+                  commitDetails.user.id,
+                )
+              )
+          )
+        for {
+          _ <- NonEmptyList.fromList(commitDetailsList).traverse_ { commits =>
+            githubWebhookRepository.createBatch(commits)
+          }
+        } yield ()
+      }
     }
 }

@@ -60,6 +60,7 @@ This Scala application is designed to interact with pull request events through 
 
 ## Features
 - **GitHub Webhooks**: Receive and process webhook notifications for pull request events. The system handles duplicates idempotently.
+- **Scheduled Job**: Fetch pull request data twice daily.
 - **Metrics API**:
     - **Project Metrics**:
         - Total Contributors
