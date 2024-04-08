@@ -1,5 +1,8 @@
 package com.githubchallenge.db.repositories.sql
 
+import com.githubchallenge.model
+import com.githubchallenge.model.Contributor
+
 object Dto {
   case class Commit(
       id: String,
@@ -14,4 +17,21 @@ object Dto {
       contributorId: Long,
       isClosed: Boolean,
     )
+
+  case class Repository(
+      id: Long,
+      name: String,
+      ownerId: Long,
+      ownerName: String,
+    ) {
+    def toDomain: model.Repository =
+      model
+        .Repository(
+          id = id,
+          name = name,
+          owner = Contributor(ownerId, ownerName),
+        )
+  }
+
+  case class RepositoryWithOwnerId(id: Long, name: String, ownerId: Long)
 }

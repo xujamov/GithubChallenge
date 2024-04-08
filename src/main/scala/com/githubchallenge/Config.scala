@@ -29,8 +29,5 @@ object Config {
   final case class HttpServerConfig(port: Int)
   case class GithubConfig(
       token: String,
-      owner: String,
-      repo: String,
-      repoId: Long,
     )
 }

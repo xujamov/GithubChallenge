@@ -29,8 +29,9 @@ object GithubWebhookService {
     new GithubWebhookService[F] {
       override def insertPRs(event: PullDetails): F[Unit] =
         for {
-          _ <- projectsRepository.insert(event.repo)
           _ <- contributorsRepository.insert(event.user)
+          _ <- contributorsRepository.insert(event.repo.owner)
+          _ <- projectsRepository.insert(event.repo)
           _ <- githubWebhookRepository.createPullRequest(event)
         } yield ()
 
@@ -44,8 +45,9 @@ object GithubWebhookService {
 
       override def insertCommits(event: CommitDetails): F[Unit] =
         for {
-          _ <- projectsRepository.insert(event.repo)
           _ <- contributorsRepository.insert(event.user)
+          _ <- contributorsRepository.insert(event.repo.owner)
+          _ <- projectsRepository.insert(event.repo)
           _ <- NonEmptyList.fromList(event.commits).traverse_ { commits =>
             githubWebhookRepository.createBatch(
               commits

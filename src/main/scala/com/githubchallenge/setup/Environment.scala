@@ -46,7 +46,7 @@ object Environment {
         .make[F](repositories)
       implicit0(backend: SttpBackend[F, Any]) <- AsyncHttpClientFs2Backend.resource[F]()
       _ <- Resource.eval(
-        ScheduledJob.make(services.githubWebhookService, config.github, config.cron).start
+        ScheduledJob.make(services.githubWebhookService, services.projectMetricsService, config.github, config.cron).start
       )
     } yield Environment[F](config, repositories, services)
 }

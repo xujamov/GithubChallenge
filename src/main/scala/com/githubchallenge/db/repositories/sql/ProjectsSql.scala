@@ -4,26 +4,34 @@ import cats.implicits.toFunctorOps
 import doobie.implicits._
 import doobie.util.update.Update
 
+import com.githubchallenge.db.repositories.sql.Dto.RepositoryWithOwnerId
 import com.githubchallenge.model.ProjectMetrics
 import com.githubchallenge.model.Repository
 
 private[repositories] object ProjectsSql {
-  def insert(project: Repository): doobie.ConnectionIO[Unit] =
+  def insert(project: RepositoryWithOwnerId): doobie.ConnectionIO[Unit] =
     fr"""
         INSERT INTO projects
-        VALUES (${project.id}, ${project.name})
+        VALUES (?, ?, ?)
         ON CONFLICT (id) DO NOTHING;
       """.update.run.void
 
-  def insertBatch(projects: List[Repository]): doobie.ConnectionIO[Unit] = {
+  def insertBatch(projects: List[RepositoryWithOwnerId]): doobie.ConnectionIO[Unit] = {
     val fragment = s"""
         INSERT INTO projects
-        VALUES (?, ?)
+        VALUES (?, ?, ?)
         ON CONFLICT (id) DO NOTHING;
       """
 
-    Update[Repository](fragment).updateMany[List](projects).void
+    Update[RepositoryWithOwnerId](fragment).updateMany[List](projects).void
   }
+
+  def getProjects: doobie.ConnectionIO[List[Repository]] =
+    fr"""
+      SELECT p.id, p.name, c.id, c.login
+      FROM projects p
+      JOIN contributors c ON c.id = p.owner_id
+    """.query[Dto.Repository].to[List].map(_.map(_.toDomain))
 
   def selectById(id: Long): doobie.ConnectionIO[Option[ProjectMetrics]] =
     fr"""

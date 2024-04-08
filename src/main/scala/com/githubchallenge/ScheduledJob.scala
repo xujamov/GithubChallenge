@@ -31,6 +31,7 @@ import com.githubchallenge.model.GithubPull
 import com.githubchallenge.model.PullDetails
 import com.githubchallenge.model.Repository
 import com.githubchallenge.service.GithubWebhookService
+import com.githubchallenge.service.ProjectMetricsService
 
 object ScheduledJob {
   private def cronScheduler[F[_]: Temporal: Sync]: Scheduler[F, CronExpr] =
@@ -38,38 +39,51 @@ object ScheduledJob {
 
   private def runJob[F[_]: MonadThrow: Logger: Calendar](
       githubWebhookService: GithubWebhookService[F],
+      projectMetricsService: ProjectMetricsService[F],
       githubConfig: GithubConfig,
     )(implicit
       backend: SttpBackend[F, Any]
     ): F[Unit] =
     (for {
       _ <- Logger[F].info("ScheduledJob: Starting")
-      commits <- fetchCommitsFromGitHub[F](
-        githubConfig.token,
-        githubConfig.owner,
-        githubConfig.repo,
-      )
-      repository = Repository(id = githubConfig.repoId, name = githubConfig.repo)
-      commitsList = commits
-        .groupBy(_.committer)
-        .map {
-          case (committer, commit) =>
-            CommitDetails(
-              commits = commit.map(githubCommit =>
-                CommitRequest(id = githubCommit.sha, githubCommit.commit.message)
-              ),
-              user = committer,
-              repo = repository,
-            )
+      repos <- projectMetricsService.getProjects
+      repoCommits <- repos
+        .traverse { repo =>
+          fetchCommitsFromGitHub[F](
+            githubConfig.token,
+            repo.owner.login,
+            repo.name,
+          ).map { commits =>
+            repo -> commits
+          }
         }
-        .toList
+        .map(_.toMap)
+
+      commitsList = repoCommits.flatMap {
+        case repo -> commits =>
+          commits
+            .groupBy(_.committer)
+            .map {
+              case (committer, commit) =>
+                CommitDetails(
+                  commits = commit.map(githubCommit =>
+                    CommitRequest(id = githubCommit.sha, githubCommit.commit.message)
+                  ),
+                  user = committer,
+                  repo = repo,
+                )
+            }
+      }.toList
+
       _ <- githubWebhookService.insertBatchCommits(commitsList)
-      pulls <- fetchPullsFromGitHub[F](
-        repository,
-        githubConfig.token,
-        githubConfig.owner,
-        githubConfig.repo,
-      )
+      pulls <- repos.flatTraverse { repo =>
+        fetchPullsFromGitHub[F](
+          repo,
+          githubConfig.token,
+          repo.owner.login,
+          repo.name,
+        )
+      }
 
       _ <- githubWebhookService.insertBatchPRs(pulls)
       _ <- Logger[F].info("ScheduledJob: Finished")
@@ -130,10 +144,13 @@ object ScheduledJob {
     )(implicit
       backend: SttpBackend[F, Any]
     ): F[List[A]] =
-    for {
+    (for {
       response <- backend.send(request)
       commits <- handleResponse[F, A](response)
-    } yield commits
+    } yield commits)
+      .handleErrorWith { error =>
+        Logger[F].error(error)("No response").as(Nil)
+      }
 
   private def handleResponse[F[_]: MonadThrow: Logger, A: Decoder](
       response: Response[Either[String, String]]
@@ -163,6 +180,7 @@ object ScheduledJob {
 
   def make[F[_]: Async: Calendar: Logger](
       githubWebhookService: GithubWebhookService[F],
+      projectMetricsService: ProjectMetricsService[F],
       githubConfig: GithubConfig,
       interval: String,
     )(implicit
@@ -179,7 +197,7 @@ object ScheduledJob {
       .evalTap { _ =>
         for {
           _ <- nextTime.traverse(nextTime => Logger[F].info(s"Job next run $nextTime"))
-          _ <- runJob(githubWebhookService, githubConfig)
+          _ <- runJob(githubWebhookService, projectMetricsService, githubConfig)
         } yield {}
       }
       .compile
